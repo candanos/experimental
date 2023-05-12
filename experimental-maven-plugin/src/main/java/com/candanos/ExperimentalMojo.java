@@ -73,11 +73,6 @@ public class ExperimentalMojo extends AbstractMojo {
             readonly = true)
     private File buildDirectory;
 
-    @Parameter(defaultValue = "${project.experimental.cobol}", required =
-            true,
-            readonly = true)
-    private String containsCobol;
-
     @Parameter(defaultValue = "${project.compileSourceRoots}", readonly = false,
             required = true)
     private List<String> compileSourceRoots;
@@ -112,6 +107,11 @@ public class ExperimentalMojo extends AbstractMojo {
     private File basedir;
     @Parameter(property = "maven.compiler.failOnError", defaultValue = "true")
     private boolean failOnError = true;
+
+
+    @Parameter(defaultValue = "${project.cobcSyslibElements}",
+            readonly = true)
+    private List<String> cobcSyslibElements;
 
     public void execute()
             throws MojoExecutionException, CompilationFailureException {
@@ -167,11 +167,14 @@ public class ExperimentalMojo extends AbstractMojo {
         } catch (CompilerException e) {
             throw new MojoExecutionException(e);
         }
-        getLog().info("stale sources are:");
-        staleSources.stream().forEach(f -> getLog().info(f.toString()));
 
         compilerConfiguration.setSourceFiles(staleSources);
 
+        String cobolSourceRoot = project.getCompileSourceRoots().stream()
+                .collect(Collectors.toList())
+                .get(0)
+                .replace("java", "cobol");
+        compilerConfiguration.addSourceLocation(cobolSourceRoot);
         // 3. lets compile sources
 
         CompilerResult compilerResult;
@@ -349,9 +352,9 @@ public class ExperimentalMojo extends AbstractMojo {
                 getLog().info("rootFile is: " + rootFile.getAbsolutePath());
                 getLog().info(
                         "outputDirectory is: " + outputDirectory.getAbsolutePath());
-                for (File x : staleSources) {
-                    getLog().info("stale sources:" + x.getAbsolutePath());
-                }
+                staleSources.stream().forEach(f -> getLog().info("compile " +
+                        "source:" + f.getAbsolutePath()));
+
             } catch (InclusionScanException e) {
                 throw new MojoExecutionException(
                         "Error scanning source root: \'" + sourceRoot + "\' " +
@@ -474,6 +477,7 @@ public class ExperimentalMojo extends AbstractMojo {
 //        }
         return dir;
     }
+
 
     // this method is originally called from CompilerMojo
     protected List<String> getCompileSourceRoots() {

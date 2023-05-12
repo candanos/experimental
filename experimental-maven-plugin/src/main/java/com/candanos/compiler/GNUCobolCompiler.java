@@ -1,5 +1,6 @@
 package com.candanos.compiler;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 
@@ -98,6 +99,14 @@ public class GNUCobolCompiler
         }
 
         return result;
+    }
+
+    protected File getCompilationSyslib(CompilerConfiguration config) {
+        File x = new File(config.getOutputLocation());
+        return new File(x.toPath()
+                .getParent()
+                .toString()
+                .concat("/cobc-syslib"));
     }
 
     /**
@@ -229,6 +238,7 @@ public class GNUCobolCompiler
             msgs.add(x.getMessage());
         }
         boolean success = returnCode == 0;
+        // that means if we didn't catch an exception we return success.
         return new CompilerResult(success, messages);
     }
 
@@ -318,19 +328,18 @@ Options can be of the form -option or /option
 
     private String[] buildCompilerArguments(
             CompilerConfiguration config,
-            String[] sourceFiles) throws CompilerException {
+            String[] sourceFiles) {
 
 /*
         TARGETDIR=$1 /target/objects
         COMPILER_ARGS=$2 "ibm fixed"
         COBOLFILES=$3
-        STEPS=$4
+        SYSLIB=$4
+        STEPS=$5
 */
 
         List<String> args = new ArrayList<String>();
-
-        String compile_script =
-                null;
+        String compile_script = null;
         ClassLoader classLoader = getClass().getClassLoader();
         InputStream inputStream = classLoader.getResourceAsStream(
                 "gnucobol_compiler.sh");
@@ -344,157 +353,49 @@ Options can be of the form -option or /option
             Files.write(buffer, tmpFile);
             compile_script = tmpFile.getAbsolutePath();
             tmpFile.deleteOnExit();
+            args.add(compile_script);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-//        compile_script = "domdomcan";
-        args.add(compile_script);
 
 //        args.add(config.getWorkingDirectory().toString()); // bu nereden
         // geliyor buraya yaz.
         args.add(config.getOutputLocation()); //$1
-        String sourceFilesAsString = "";
-        for (String sourceFile : sourceFiles) {
-            sourceFilesAsString = sourceFilesAsString + " " + sourceFile;
-        }
+
         args.add("-std=ibm -fixed"); //$2 bunu da pomdan ya da daha sistematik
-        args.add(sourceFilesAsString); //$3
-        // hale getir.
+
+        try {
+            String sourceRoot = config.getSourceLocations().get(0);
+            String sourceFilesAsString =
+                    convertSourceFilesToPackagedFilesAsJson(sourceRoot,
+                            sourceFiles);
+            //TODO: this is for converting string into bash style. Find a
+            // better way.
+            sourceFilesAsString =
+                    sourceFilesAsString.replace("\\\\", "/").replace("C:",
+                            "/C");
+            args.add("'" + sourceFilesAsString + "'"); //$3
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        String syslibAsString = getCompilationSyslib(config).toString();
+        args.add(syslibAsString); //$4
+//        args.add("comp or link"); //$5
+
         return args.toArray(new String[args.size()]);
     }
 
-    // original of buildCompilerArguments in C# compiler
-    private String[] buildCompilerArgumentsOfCSCompiler(
-            CompilerConfiguration config,
+    private String convertSourceFilesToPackagedFilesAsJson(
+            String sourceRoot,
             String[] sourceFiles)
-            throws CompilerException {
-        List<String> args = new ArrayList<String>();
-
-        if (config.isDebug()) {
-            args.add("/debug+");
-        }
-        else {
-            args.add("/debug-");
-        }
-
-        // config.isShowWarnings()
-        // config.getSourceVersion()
-        // config.getTargetVersion()
-        // config.getSourceEncoding()
-
-        // ----------------------------------------------------------------------
-        //
-        // ----------------------------------------------------------------------
-
-        for (String element : config.getClasspathEntries()) {
-            File f = new File(element);
-
-            if (!f.isFile()) {
-                continue;
-            }
-
-            args.add("/reference:\"" + element + "\"");
-        }
-
-        // ----------------------------------------------------------------------
-        // Main class
-        // ----------------------------------------------------------------------
-
-        Map<String, String> compilerArguments =
-                config.getCustomCompilerArgumentsAsMap();
-
-        String mainClass = compilerArguments.get("-main");
-
-        if (!StringUtils.isEmpty(mainClass)) {
-            args.add("/main:" + mainClass);
-        }
-
-        // ----------------------------------------------------------------------
-        // Xml Doc output
-        // ----------------------------------------------------------------------
-
-        String doc = compilerArguments.get("-doc");
-
-        if (!StringUtils.isEmpty(doc)) {
-            args.add("/doc:" + new File(config.getOutputLocation(),
-                    config.getOutputFileName() + ".xml").getAbsolutePath());
-        }
-
-        // ----------------------------------------------------------------------
-        // Xml Doc output
-        // ----------------------------------------------------------------------
-
-        String nowarn = compilerArguments.get("-nowarn");
-
-        if (!StringUtils.isEmpty(nowarn)) {
-            args.add("/nowarn:" + nowarn);
-        }
-
-        // ----------------------------------------------------------------------
-        // Out - Override output name, this is required for generating the
-        // unit test dll
-        // ----------------------------------------------------------------------
-
-        String out = compilerArguments.get("-out");
-
-        if (!StringUtils.isEmpty(out)) {
-            args.add("/out:" + new File(config.getOutputLocation(),
-                    out).getAbsolutePath());
-        }
-        else {
-            args.add("/out:" + new File(config.getOutputLocation(),
-                    getOutputFile(config)).getAbsolutePath());
-        }
-
-        // ----------------------------------------------------------------------
-        // Resource File - compile in a resource file into the assembly being
-        // created
-        // ----------------------------------------------------------------------
-        String resourcefile = compilerArguments.get("-resourcefile");
-
-        if (!StringUtils.isEmpty(resourcefile)) {
-            String resourceTarget =
-                    (String) compilerArguments.get("-resourcetarget");
-            args.add("/res:" + new File(
-                    resourcefile).getAbsolutePath() + "," + resourceTarget);
-        }
-
-        // ----------------------------------------------------------------------
-        // Target - type of assembly to produce, lib,exe,winexe etc...
-        // ----------------------------------------------------------------------
-
-        String target = compilerArguments.get("-target");
-
-        if (StringUtils.isEmpty(target)) {
-            args.add("/target:library");
-        }
-        else {
-            args.add("/target:" + target);
-        }
-
-        // ----------------------------------------------------------------------
-        // remove MS logo from output (not applicable for mono)
-        // ----------------------------------------------------------------------
-        String nologo = compilerArguments.get("-nologo");
-
-        if (!StringUtils.isEmpty(nologo)) {
-            args.add("/nologo");
-        }
-
-        // ----------------------------------------------------------------------
-        // add any resource files
-        // ----------------------------------------------------------------------
-        this.addResourceArgs(config, args);
-
-        // ----------------------------------------------------------------------
-        // add source files
-        // ----------------------------------------------------------------------
-        for (String sourceFile : sourceFiles) {
-            args.add(sourceFile);
-        }
-
-        return args.toArray(new String[args.size()]);
+            throws JsonProcessingException {
+        File cobolSourceRoot = new File(sourceRoot);
+        CobolPackaging cobolPackaging = new CobolPackaging(cobolSourceRoot);
+        return cobolPackaging.getSourceFilesInPackagesAsJson(sourceFiles);
     }
+
 
     private void addResourceArgs(CompilerConfiguration config,
                                  List<String> args) {
@@ -592,27 +493,42 @@ Options can be of the form -option or /option
                                                    BufferedReader input,
                                                    CompilerMessage.Kind kind)
             throws IOException {
-        List<CompilerMessage> errors = new ArrayList<CompilerMessage>();
+// this method is specific to compiler type
+        List<CompilerMessage> messages = new ArrayList<CompilerMessage>();
         String line;
-        StringBuilder buffer;
-
+        StringBuilder buffer; // this is main buffer of input but we need to
+        // filter it.
+        StringBuilder warningBuffer;
         while (true) {
             // cleanup the buffer
             buffer = new StringBuilder(); // this is quicker than clearing it
-
+            warningBuffer = new StringBuilder();
             do {
                 line = input.readLine();
                 if (line == null) {
                     if (buffer.length() > 0) {
-                        errors.add(new CompilerMessage(buffer.toString(),
-                                kind));
+                        messages.add(new CompilerMessage(buffer.toString(),
+                                kind)); // here kind is either ERROR or NOTE.
                     }
-                    return errors;
+
+                    if (warningBuffer.length() > 0) {
+                        messages.add(
+                                new CompilerMessage(warningBuffer.toString(),
+                                        CompilerMessage.Kind.WARNING));
+                    }
+                    return messages;
                 }
 
                 else {
-                    buffer.append(line);
-                    buffer.append(EOL);
+                    if (line.contains("warning: ")) {
+                        warningBuffer.append(line);
+                        warningBuffer.append(EOL);
+                    }
+                    else {
+                        buffer.append(line);
+                        buffer.append(EOL);
+                    }
+
                 }
 
             }

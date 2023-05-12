@@ -1,12 +1,4 @@
-com\candanos\util\scan\mapping\SuffixMapping.class
-com\candanos\util\scan\mapping\SingleTargetSourceMapping.class
-com\candanos\util\scan\mapping\SourceMapping.class
-com\candanos\util\scan\SimpleSourceInclusionScanner.class
-com\candanos\util\scan\StaleSourceScanner.class
-com\candanos\util\scan\AbstractSourceInclusionScanner.class
 com\candanos\compiler\GNUCobolCompiler.class
-com\candanos\util\scan\SourceInclusionScanner.class
-com\candanos\util\StreamPumper.class
 com\candanos\ExperimentalMojo$1.class
-com\candanos\util\scan\InclusionScanException.class
+com\candanos\compiler\CobolPackaging.class
 com\candanos\ExperimentalMojo.class
