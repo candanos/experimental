@@ -64,7 +64,7 @@ public class CobolPackaging {
         ;
         */
         ObjectMapper objectMapper = new ObjectMapper();
-        
+
         return objectMapper.writeValueAsString(obj);
 /*        try {
             return objectMapper.writeValueAsString(obj);
@@ -77,9 +77,10 @@ public class CobolPackaging {
 
     public Map<String, List<String>> groupFilePaths(String[] filePaths) {
         Map<String, List<String>> groupedPaths = new HashMap<>();
-
+        String fileName = "";
         for (String filePath : filePaths) {
             File file = new File(filePath);
+            fileName = file.getName();
             String parentPath = file.getParent();
             File parentDir = new File(parentPath);
             String packageName = this.cobolSourceRoot.toPath()
@@ -88,7 +89,7 @@ public class CobolPackaging {
                 if (!groupedPaths.containsKey(packageName)) {
                     groupedPaths.put(packageName, new ArrayList<>());
                 }
-                groupedPaths.get(packageName).add(filePath);
+                groupedPaths.get(packageName).add(fileName);
             }
         }
 

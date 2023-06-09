@@ -150,10 +150,8 @@ public class ExperimentalMojo extends AbstractMojo {
                 "class", null);
     }
 
-
  */
-
-
+        
         GNUCobolCompiler compiler = (GNUCobolCompiler) getCompiler();
         compiler.setLog(getLog());
 

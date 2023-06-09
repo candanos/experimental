@@ -331,11 +331,11 @@ Options can be of the form -option or /option
             String[] sourceFiles) {
 
 /*
-        TARGETDIR=$1 /target/objects
-        COMPILER_ARGS=$2 "ibm fixed"
-        COBOLFILES=$3
-        SYSLIB=$4
-        STEPS=$5
+
+    PROJECT_ROOT=$1 #"/c/cloud/github/experimental-repository'
+    COBOL_FILE_GROUPS=$2 #{"subs":["SUBPGM01.cbl","SUBPGM02.cbl"],
+"drivers/gunsonu":["EXPBATCH.cbl"]}'
+    OPERATION=$3 #compile or link
 */
 
         List<String> args = new ArrayList<String>();
@@ -358,11 +358,14 @@ Options can be of the form -option or /option
             throw new RuntimeException(e);
         }
 
-//        args.add(config.getWorkingDirectory().toString()); // bu nereden
-        // geliyor buraya yaz.
-        args.add(config.getOutputLocation()); //$1
+        // workingDirectory is projects baseDir.
+        String projectDir = config.getWorkingDirectory()
+                .toString()
+                .replace("\\", "/")
+                .replace("C:",
+                        "/C");
+        args.add(projectDir);
 
-        args.add("-std=ibm -fixed"); //$2 bunu da pomdan ya da daha sistematik
 
         try {
             String sourceRoot = config.getSourceLocations().get(0);
@@ -380,8 +383,8 @@ Options can be of the form -option or /option
         }
 
 
-        String syslibAsString = getCompilationSyslib(config).toString();
-        args.add(syslibAsString); //$4
+//        String syslibAsString = getCompilationSyslib(config).toString();
+//        args.add(syslibAsString); //$4
 //        args.add("comp or link"); //$5
 
         return args.toArray(new String[args.size()]);

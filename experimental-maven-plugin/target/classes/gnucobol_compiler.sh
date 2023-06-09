@@ -5,26 +5,26 @@ then
    MSYS2_HOME="/c/msys64"
 fi
 
+BASH_PATH=$MSYS2_HOME"/usr/bin"
 GNUCOBOL_PATH=$MSYS2_HOME"/mingw64/bin"
 export MINGW_PREFIX=$MSYS2_HOME"/mingw64"
-export PATH=$GNUCOBOL_PATH:$PATH
+export PATH=$GNUCOBOL_PATH:$BASH_PATH:$PATH
 #. cobenv.sh --setenv
 . cobenv.sh --setenv 1> /dev/null
 #. cobenv.sh --showenv
 
-TARGETDIR=$1 #TARGETDIR="/c/cloud/github/experimental-repository/src/main/cobol"
-COMPILER_ARGS=$2 #PARMS="-std=ibm -fixed"
-COBOL_FILE_GROUPS=$3 #COBOLFILES="SUBPGM01.cbl SUBPGM02.cbl"
-SYSLIB=$4
-STEPS=$5 #compile or link
+PROJECT_ROOT=$1 #"/c/cloud/github/experimental-repository'
+COBOL_FILE_GROUPS=$2 #{"subs":["SUBPGM01.cbl","SUBPGM02.cbl"],"drivers/gunsonu":["EXPBATCH.cbl"]}'
+OPERATION=$3 #compile or link
 
-# following line is single output file for all source files.
-# cobc $PARMS -x -o MAINPGM MAINPGM.cbl SUBPGM01.cbl SUBPGM02.cbl
-# ./MAINPGM
+COMPILER_ARGS="-std=ibm"
+TARGETDIR="$PROJECT_ROOT/target/objects"
+SOURCEDIR="$PROJECT_ROOT/src/main/cobol"
+SYSLIB="$PROJECT_ROOT/target/cobc-syslib"
 
+#copy projects own copybooks and dcls into syslib
+find $SOURCEDIR -type f \( -name "*.cbl" -or -name "*.cpy" \) -exec cp --preserve {} "$SYSLIB" \;
 json_string=$COBOL_FILE_GROUPS
-# Use sed to replace backslashes with double backslashes
-#json_string=$(echo "$json_string" | sed 's/\\/\\\\/g')
 
 # Parse JSON string and iterate over each key-value pair
 while read key value; do
@@ -35,11 +35,13 @@ while read key value; do
   PACKAGE=$key
   mkdir -p $PACKAGE; cd $PACKAGE
 
-  # Concatenate all items in the array with a space between them
-  COBOLFILES=$(echo "$value" | jq -r '.[]' | sed 's/\\/\\\\/g' | tr '\n' ' ')
+  # Concatenate all items in the array with a space between them,
+  # and as converted to fullpath.
+  COBOLFILES=$(echo "$value" | jq -r --arg var "$SOURCEDIR/$PACKAGE/" '.[] | "\($var)\(.)"' | sed 's/\\/\\\\/g' | tr '\n' ' ')
   # Trim leading and trailing spaces.
   COBOLFILES=${COBOLFILES#"${COBOLFILES%%[![:space:]]*}"}
   COBOLFILES=${COBOLFILES%"${COBOLFILES##*[![:space:]]}"}
+
   cobc $PARMS -c $COBOLFILES -I"$SYSLIB"
 done < <(echo "$json_string" | jq -r 'to_entries | .[] | "\(.key) \(.value)"')
 
