@@ -162,7 +162,8 @@ public class GNUCobolCompiler
     // ----------------------------------------------------------------------
     //
     // ----------------------------------------------------------------------
-    public CompilerResult performCompile(CompilerConfiguration config)
+    public CompilerResult performCompile(
+            CompilerConfiguration expConfig)
             throws CompilerException {
 
 /*      this.success = success;
@@ -178,6 +179,8 @@ public class GNUCobolCompiler
 */
 
 
+        ExperimentalCompilerConfiguration config =
+                (ExperimentalCompilerConfiguration) expConfig;
         List<String> msgs = new ArrayList<String>();
         String[] sourceFiles = getSourceFiles(config);
 
@@ -298,36 +301,27 @@ Options can be of the form -option or /option
         return true;
     }
 
-    public String[] createCommandLine(CompilerConfiguration config)
+    public String[] createCommandLine(CompilerConfiguration expConfig)
             throws CompilerException {
+        ExperimentalCompilerConfiguration config =
+                (ExperimentalCompilerConfiguration) expConfig;
         return buildCompilerArguments(config,
                 GNUCobolCompiler.getSourceFiles(config));
     }
 
-    private String findExecutable(CompilerConfiguration config) {
-        String executable = config.getExecutable();
+    private String findExecutable(ExperimentalCompilerConfiguration config) {
+
+        String executable = config.getScriptExecutable();
         if (!StringUtils.isEmpty(executable)) {
             return executable;
         }
-
-        String scriptrRunner = "bash";
-        if (Os.isFamily("windows")) {
-//            scriptrRunner =
-//                    Paths.get("C:\\msys64\\usr\\bin\\bash.exe").toString();
-            scriptrRunner = "bash.exe";
+        else {
+            return "bash.exe";
         }
-        if (Os.isFamily("z/os")) {
-            scriptrRunner = "bash";
-        }
-
-        String script = "gnucobol_compiler.sh";
-//        executable = scriptrRunner + " " + script;
-        executable = scriptrRunner;
-        return executable;
     }
 
     private String[] buildCompilerArguments(
-            CompilerConfiguration config,
+            ExperimentalCompilerConfiguration config,
             String[] sourceFiles) {
 
 /*
@@ -342,7 +336,7 @@ Options can be of the form -option or /option
         String compile_script = null;
         ClassLoader classLoader = getClass().getClassLoader();
         InputStream inputStream = classLoader.getResourceAsStream(
-                "gnucobol_compiler.sh");
+                config.getScriptFile());
 
 
         File tmpFile = null;

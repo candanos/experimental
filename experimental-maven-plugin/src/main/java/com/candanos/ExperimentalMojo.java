@@ -16,6 +16,7 @@ package com.candanos;
  * limitations under the License.
  */
 
+import com.candanos.compiler.ExperimentalCompilerConfiguration;
 import com.candanos.compiler.GNUCobolCompiler;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -109,9 +110,15 @@ public class ExperimentalMojo extends AbstractMojo {
     private boolean failOnError = true;
 
 
-    @Parameter(defaultValue = "${project.cobcSyslibElements}",
-            readonly = true)
-    private List<String> cobcSyslibElements;
+    /*    configuration parameters of the plugin. */
+    @Parameter(property = "scriptRunner", required = true)
+    private String scriptRunner;
+
+    @Parameter(property = "scriptFile", required = true)
+    private String scriptFile;
+
+    @Parameter(property = "scriptOptions", required = false)
+    private String[] scriptOptions;
 
     public void execute()
             throws MojoExecutionException, CompilationFailureException {
@@ -151,7 +158,7 @@ public class ExperimentalMojo extends AbstractMojo {
     }
 
  */
-        
+
         GNUCobolCompiler compiler = (GNUCobolCompiler) getCompiler();
         compiler.setLog(getLog());
 
@@ -297,8 +304,8 @@ public class ExperimentalMojo extends AbstractMojo {
     }
 
     private CompilerConfiguration getCompilerConfiguration() {
-        CompilerConfiguration compilerConfiguration =
-                new CompilerConfiguration();
+        ExperimentalCompilerConfiguration compilerConfiguration =
+                new ExperimentalCompilerConfiguration();
         compilerConfiguration.setOutputLocation(
                 getOutputDirectory().getAbsolutePath());
 
@@ -312,6 +319,9 @@ public class ExperimentalMojo extends AbstractMojo {
         // basedir is root of repo, directory where pom.xml is.
 
         compilerConfiguration.setBuildDirectory(buildDirectory);
+        compilerConfiguration.setScriptExecutable(scriptRunner);
+        compilerConfiguration.setScriptFile(scriptFile);
+        compilerConfiguration.setScriptOptions(scriptOptions);
         return compilerConfiguration;
     }
 

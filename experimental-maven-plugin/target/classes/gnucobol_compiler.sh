@@ -42,13 +42,5 @@ while read key value; do
   COBOLFILES=${COBOLFILES#"${COBOLFILES%%[![:space:]]*}"}
   COBOLFILES=${COBOLFILES%"${COBOLFILES##*[![:space:]]}"}
 
-  cobc $PARMS -c $COBOLFILES -I"$SYSLIB"
+  cobc $PARMS -c -w $COBOLFILES -I"$SYSLIB"
 done < <(echo "$json_string" | jq -r 'to_entries | .[] | "\(.key) \(.value)"')
-
-
-# that worked
-# compilation
-
-
-# link
-# cobc -c -x "MAINPGM.cbl" && cobc -x -o MAIN MAINPGM.o SUBPGM01.o SUBPGM02.o

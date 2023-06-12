@@ -44,13 +44,6 @@
           <description></description>
         </parameter>
         <parameter>
-          <name>cobcSyslibElements</name>
-          <type>java.util.List&lt;java.lang.String&gt;</type>
-          <required>false</required>
-          <editable>false</editable>
-          <description></description>
-        </parameter>
-        <parameter>
           <name>compileSourceRoots</name>
           <type>java.util.List&lt;java.lang.String&gt;</type>
           <required>true</required>
@@ -115,6 +108,27 @@
           <description></description>
         </parameter>
         <parameter>
+          <name>scriptFile</name>
+          <type>java.lang.String</type>
+          <required>true</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
+          <name>scriptOptions</name>
+          <type>java.lang.String[]</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
+          <name>scriptRunner</name>
+          <type>java.lang.String</type>
+          <required>true</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+        <parameter>
           <name>showCompilationChanges</name>
           <type>boolean</type>
           <required>false</required>
@@ -125,13 +139,15 @@
       <configuration>
         <basedir implementation="java.io.File" default-value="${basedir}"/>
         <buildDirectory implementation="java.io.File" default-value="${project.build.directory}"/>
-        <cobcSyslibElements implementation="java.util.List" default-value="${project.cobcSyslibElements}"/>
         <compileSourceRoots implementation="java.util.List" default-value="${project.compileSourceRoots}"/>
         <executable implementation="java.lang.String">${maven.compiler.executable}</executable>
         <failOnError implementation="boolean" default-value="true">${maven.compiler.failOnError}</failOnError>
         <generatedSourcesDirectory implementation="java.io.File" default-value="${project.build.directory}/generated-sources/annotations"/>
         <outputDirectory implementation="java.io.File" default-value="${project.build.outputDirectory}"/>
         <project implementation="org.apache.maven.project.MavenProject" default-value="${project}"/>
+        <scriptFile implementation="java.lang.String">${scriptFile}</scriptFile>
+        <scriptOptions implementation="java.lang.String[]">${scriptOptions}</scriptOptions>
+        <scriptRunner implementation="java.lang.String">${scriptRunner}</scriptRunner>
         <showCompilationChanges implementation="boolean" default-value="true">${maven.compiler.showCompilationChanges}</showCompilationChanges>
       </configuration>
     </mojo>

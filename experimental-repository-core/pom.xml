@@ -104,6 +104,10 @@
                 <groupId>com.candanos</groupId>
                 <artifactId>experimental-maven-plugin</artifactId>
                 <version>0.0.1-SNAPSHOT</version>
+                <configuration>
+                    <scriptRunner>bash.exe</scriptRunner>
+                    <scriptFile>gnucobol_compiler.sh</scriptFile>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>

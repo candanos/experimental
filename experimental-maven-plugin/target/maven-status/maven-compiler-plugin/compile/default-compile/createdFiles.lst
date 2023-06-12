@@ -1,4 +1,5 @@
 com\candanos\compiler\GNUCobolCompiler.class
+com\candanos\compiler\ExperimentalCompilerConfiguration.class
 com\candanos\ExperimentalMojo$1.class
 com\candanos\compiler\CobolPackaging.class
 com\candanos\ExperimentalMojo.class

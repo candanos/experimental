@@ -36,7 +36,7 @@
             <!-- eger istedigimiz zaman resources plugun i tekrar calistirabilirsek, 
             artifacts i da koyabiliriz. -->
             <!-- <resource> -->
-                <!-- <directory>target/objects</directory> -->
+            <!-- <directory>target/objects</directory> -->
             <!-- </resource> -->
         </resources>
         <plugins>
@@ -103,13 +103,19 @@
                 <groupId>com.candanos</groupId>
                 <artifactId>experimental-maven-plugin</artifactId>
                 <version>0.0.1-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>experiment</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <configuration>
+                    <scriptRunner>bash.exe</scriptRunner>
+                    <scriptFile>gnucobol_compiler.sh</scriptFile>
+                    <!-- <scriptRunner>python.exe</scriptRunner> -->
+                    <!-- <scriptFile>blackbox_compiler.py</scriptFile> -->
+                </configuration>
+                <!-- <executions> -->
+                    <!-- <execution> -->
+                        <!-- <goals> -->
+                            <!-- <goal>experiment</goal> -->
+                        <!-- </goals> -->
+                    <!-- </execution> -->
+                <!-- </executions> -->
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
