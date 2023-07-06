@@ -41,6 +41,6 @@ while read key value; do
   # Trim leading and trailing spaces.
   COBOLFILES=${COBOLFILES#"${COBOLFILES%%[![:space:]]*}"}
   COBOLFILES=${COBOLFILES%"${COBOLFILES##*[![:space:]]}"}
-
+  echo "compiling fils $COBOLFILES under the package $PACKAGE" 
   cobc $PARMS -c -w $COBOLFILES -I"$SYSLIB"
 done < <(echo "$json_string" | jq -r 'to_entries | .[] | "\(.key) \(.value)"')
